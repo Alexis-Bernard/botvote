@@ -1,8 +1,9 @@
+import sys
 import requests
 import re
 import time
-from fp.fp import FreeProxy
 
+exit = True
 
 def getPoint(username, password):
     res = connect(username, password)
@@ -93,10 +94,11 @@ def vote(username, password, out):
                     print('Le vote à échoué pour ' + username +
                           " mais il semble qu'il est tout de même possible de voter.")
 
-                    return timeDelta
-
         except Exception as ex:
             print('Erreur lors du vote : ')
             print(ex)
 
-    return timeDelta
+    if (exit):
+        sys.exit(1)
+    else:
+        return timeDelta
