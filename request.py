@@ -5,6 +5,7 @@ import time
 
 exit = True
 
+
 def getPoint(username, password):
     res = connect(username, password)
     return res.text.split(';')[1] if res else 0
@@ -24,7 +25,11 @@ def connect(username, password):
         text = result.text.split(';')
 
         if text[0] == 'valid':
-            print('Connecté : ' + text[2] + ' - ' + text[1] + ' pts')
+            result.timeUntilVote = getTimeUntilVote(result.cookies)
+
+            print('Connecté : ' + text[2] + ' - ' + text[1] + ' pts' +
+                  (' - ' + time.strftime('%H:%M:%S', time.gmtime(result.timeUntilVote)) + ' cooldown' if result.timeUntilVote != 0 else ''))
+
             return result
         else:
             print('Mauvais mot de passe pour ' + username + '.')
@@ -53,12 +58,29 @@ def getOutValue():
         print(ex)
 
 
+def getTimeUntilVote(cookies):
+    try:
+        result = requests.post(
+            'https://area-serveur.eu/voter.php', data={'step': 1}, cookies=cookies)
+
+        text = result.text.split(';')
+
+        return int(text[1]) if text[0] == '-1' else 0
+
+    except Exception as ex:
+        print('Erreur lors du vote : ')
+        print(ex)
+
+
 def vote(username, password, out):
     timeDelta = 30
 
     result = connect(username, password)
 
     if result != None:
+        if (result.timeUntilVote):
+            return result.timeUntilVote + timeDelta
+
         cookies = result.cookies
 
         url = 'https://area-serveur.eu/voter.php'
@@ -78,26 +100,13 @@ def vote(username, password, out):
 
                 return 10800 + timeDelta
             else:
-                result = requests.post(url, data={'step': 1}, cookies=cookies)
-
-                text = result.text.split(';')
-
-                if text[0] == '-1':
-                    timeUntilVote = int(text[1])
-
-                    print('Le vote sera possible dans ' +
-                          time.strftime('%H:%M:%S', time.gmtime(timeUntilVote)) +
-                          ' pour ' + username + '.')
-
-                    return timeUntilVote + timeDelta
-                else:
-                    print('Le vote à échoué pour ' + username +
-                          " mais il semble qu'il est tout de même possible de voter.")
+                print('Le vote à échoué pour ' + username +
+                      " mais il semble qu'il soit tout de même possible de voter.")
 
         except Exception as ex:
             print('Erreur lors du vote : ')
             print(ex)
-
+            
     if (exit):
         sys.exit(1)
     else:
