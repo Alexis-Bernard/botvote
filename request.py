@@ -5,7 +5,8 @@ from fp.fp import FreeProxy
 
 
 def getPoint(username, password):
-    return connect(username, password).text.split(';')[1]
+    res = connect(username, password)
+    return res.text.split(';')[1] if res else 0
 
 
 def connect(username, password):
@@ -52,7 +53,7 @@ def getOutValue():
 
 
 def vote(username, password, out):
-    timeDelta = 180
+    timeDelta = 30
 
     result = connect(username, password)
 
@@ -68,11 +69,13 @@ def vote(username, password, out):
 
         try:
             result = None
-            while result == None:
-                result = voteWithProxy(url, data, cookies)
+
+            result = requests.post(url, data=data, cookies=cookies)
 
             if result.text == '1':
                 print('Vote réussi pour ' + username)
+
+                return 10800 + timeDelta
             else:
                 result = requests.post(url, data={'step': 1}, cookies=cookies)
 
@@ -90,25 +93,10 @@ def vote(username, password, out):
                     print('Le vote à échoué pour ' + username +
                           " mais il semble qu'il est tout de même possible de voter.")
 
+                    return timeDelta
+
         except Exception as ex:
             print('Erreur lors du vote : ')
             print(ex)
 
     return timeDelta
-
-
-def voteWithProxy(url, data, cookies):
-    try:
-        proxy = FreeProxy(rand=True).get()
-
-        proxies = {
-            'https': proxy
-        }
-
-        return requests.post(url, data=data, cookies=cookies, proxies=proxies)
-
-    except Exception as ex:
-        print('Erreur lors du vote avec proxy : ')
-        print(ex)
-
-        return None

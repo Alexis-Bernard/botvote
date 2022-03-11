@@ -1,29 +1,28 @@
-from os import read
 import request
 import time
-
-usr = ''
-pwd = ''
-
-def getPoints():
-    sum = 0
-
-    for i in range(11):
-        sum += int(request.getPoint(usr + str(i), pwd))
-
-    print('Total : ' + str(sum))
+import sys
+import math
 
 
-def vote():
-    while True:
-        out = request.getOutValue()
+def vote(usr, pwd, startIndex):
+    out = request.getOutValue()
 
-        #lineSplit = open("log", "r").readline().split(' ')
+    index = str(math.floor(time.gmtime().tm_hour / 3) % 4 + int(startIndex))
 
-        for i in range(11):
-            timeToSleep = request.vote(usr + str(i), pwd, out)
+    print('Vote with ' + index + ' at ' + time.ctime())
+
+    timeToSleep = request.vote(usr + index, pwd, out)
+
+    if timeToSleep < 60:
+        print('Waiting ' + str(timeToSleep) + ' seconds.\n')
 
         time.sleep(timeToSleep)
 
+        vote(usr, pwd, startIndex)
 
-getPoints()
+
+if len(sys.argv) == 4:
+    vote(sys.argv[1], sys.argv[2], sys.argv[3])
+else:
+    print(
+        "Arguments incorrects. 'python3 main.py [username] [password] [count]'")
