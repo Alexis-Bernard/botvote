@@ -18,7 +18,7 @@ def vote(usr, pwd, startIndex):
 
         time.sleep(timeToSleep)
 
-        vote(usr, pwd, startIndex)
+        request.vote(usr + index, pwd, startIndex)
 
 
 if len(sys.argv) == 4:
